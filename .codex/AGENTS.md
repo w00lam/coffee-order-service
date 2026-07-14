@@ -130,8 +130,7 @@
 - Follow the language policy defined in `skills/common.md`.
 - Human-facing artifact language must follow the service audience rules in `skills/common.md`.
 - Skill and agent documents must be written in English.
-- Commit messages should use English.
-- Issue titles, issue descriptions, pull request titles, pull request descriptions, review comments, and review responses should follow the service audience language rules unless the repository defines another convention.
+- Commit messages, issue titles, issue descriptions, pull request titles, pull request descriptions, review comments, and review responses should follow the service audience language rules unless the repository defines another convention.
 
 </language_policy>
 
