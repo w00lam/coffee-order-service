@@ -27,6 +27,19 @@
 
 </decision_identification>
 
+<interactive_decision_workflow>
+
+- When a request involves material architectural, infrastructure, product, or operational choices, do not select an option without explicit user confirmation.
+- Identify the decision topic and relevant constraints before presenting options.
+- Present realistic options with their trade-offs.
+- Ask one focused question at a time.
+- Use each answer to narrow the available options.
+- Keep unresolved matters as Open Decisions.
+- Create or update a Decision Record only after the user explicitly accepts a direction.
+- Do not generate implementation code while the decision is under discussion.
+
+</interactive_decision_workflow>
+
 <option_analysis>
 
 - Options must be compared against verified requirements and constraints.

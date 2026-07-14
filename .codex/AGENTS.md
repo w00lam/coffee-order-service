@@ -43,7 +43,7 @@
 
 - Use `skills/repository.md` for repository initialization, branch strategy, label strategy, template setup, artifact organization, and repository readiness checks.
 - Use `skills/requirements.md` for requirements gathering, requirements clarification, requirements validation, scope definition, constraint identification, assumption identification, and requirement readiness evaluation.
-- Use `skills/decision.md` for decision identification, option comparison, trade-off analysis, decision recording, rejected alternatives, open decision tracking, and downstream impact guidance.
+- Use `skills/decision.md` for decision identification, interactive decision facilitation, option comparison, trade-off analysis, decision recording, rejected alternatives, open decision tracking, and downstream impact guidance.
 - Use `skills/domain.md` for domain identification, domain decomposition, domain boundary analysis, domain dependency analysis, domain grouping, domain complexity analysis, ownership analysis, and domain allocation guidance.
 - Use `skills/specification.md` for API specification generation, data model specification, ERD generation, flow generation, sequence diagram generation, state definition, business rule definition, validation rule definition, and specification artifact generation.
 - Use `skills/issue.md` for issue planning, issue creation, issue decomposition, label selection, priority assignment, and working branch name definition.
