@@ -23,6 +23,8 @@ Accepted
 - 애플리케이션은 여러 서버의 여러 인스턴스로 실행할 수 있게 구성한다.
 - 애플리케이션 인스턴스는 로컬 상태에 의존하지 않고 공유 데이터 저장소와 메시징 인프라를 사용한다.
 - 성능 검증의 업무 배경은 다수 매장을 가진 프랜차이즈 서비스로 둔다.
+- Redis 고가용성 필수 범위는 Primary/Replica와 Sentinel의 장애 감지·자동 Failover 및 클라이언트 재연결 흐름을 설계·학습하고, 로컬에서는 Redis 중단 시 PostgreSQL 집계 대체 조회가 동작하는지 실제 검증하는 데까지로 한다.
+- Sentinel이 Replica를 새 Primary로 승격하고 애플리케이션이 재연결하는 실제 Failover 검증은 필수 범위에서 제외하고 시간 여유가 있을 때 선택적으로 수행한다.
 
 PostgreSQL, Kafka, Redis는 사용자가 학습한 기술을 활용하면서 각각 원자적 영속성, 비동기 전달, 빠른 조회와 분산 조정이라는 서로 다른 책임을 맡는다. 구성요소가 늘어 운영 복잡성과 장애 지점이 증가하지만, 기준 데이터와 파생 데이터를 구분하고 다중 인스턴스 확장을 검증할 수 있다.
 
@@ -43,16 +45,19 @@ PostgreSQL, Kafka, Redis는 사용자가 학습한 기술을 활용하면서 각
 - Trade-offs: 선점 상태와 임대 만료 복구가 필요하고, 조회 조건과 Partial Index 조건을 일치시켜야 하며, 처리 이력 보관 정책이 추가된다.
 - Decision: Accepted.
 
+- Option: Sentinel 구조는 설계·학습하고 Redis 장애 시 PostgreSQL 대체 조회는 로컬에서 검증하되 실제 Sentinel Failover는 선택 범위로 둔다.
+- Rationale: Redis 장애 중 인기 메뉴 정확성과 가용성은 실제로 검증하면서, Sentinel 다중 노드 구성과 클라이언트 재연결 검증이 핵심 주문·정합성 구현 범위를 과도하게 확장하지 않도록 한다.
+- Trade-offs: 자동 Primary 승격과 클라이언트 재연결의 실제 동작은 필수 검증 증거에 포함되지 않으며 선택 검증을 수행하기 전까지 설계 수준의 근거만 남는다.
+- Decision: Accepted.
+
 ## Proposed
 
 - 개발과 주된 검증은 Docker 기반 다중 컨테이너로 수행한다.
 - 최종 검증에서는 AWS에 ALB, 복수 애플리케이션 인스턴스와 RDS를 일부 배포한다.
 - MSK와 ElastiCache는 아키텍처를 설계하되 실제 배포 범위는 비용과 과제 범위를 고려해 제한한다.
 - 로컬 다중 컨테이너 검증과 AWS 일부 배포 결과를 함께 제시한다.
-- Redis 고가용성은 Primary/Replica와 Sentinel의 장애 감지, 리더 선출, 자동 Failover 및 클라이언트 재연결 흐름을 학습·설계한다.
-- Sentinel 검증 시 Redis Primary 장애 동안 PostgreSQL 집계 대체 조회가 유지되고, Failover 후 캐시 갱신이 재개되는 시나리오를 다룬다.
 
-위 AWS 배포 범위와 Redis Sentinel의 실제 검증 환경 포함 여부는 잠정 방향이며 Accepted로 승격하지 않는다.
+위 AWS 배포 범위는 잠정 방향이며 Accepted로 승격하지 않는다.
 
 ## Rejected Alternatives
 
@@ -76,8 +81,7 @@ PostgreSQL, Kafka, Redis는 사용자가 학습한 기술을 활용하면서 각
 - PostgreSQL, Kafka와 Redis의 구체적인 버전.
 - Kafka Broker 수, 복제 수와 장애 허용 수준.
 - PostgreSQL 고가용성과 읽기 복제본을 학습·설계 범위에 둘지 실제 검증 환경에 포함할지 여부.
-- Redis Sentinel 기반 Primary/Replica 구성을 설계·학습까지만 수행할지 로컬 장애 전환 검증까지 포함할지 여부.
-- Redis Sentinel 수, Replica 수, Quorum, Failover 제한시간과 클라이언트 재연결 설정.
+- 선택 범위인 실제 Sentinel Failover 검증을 수행할 경우의 Sentinel 수, Replica 수, Quorum, Failover 제한시간과 클라이언트 재연결 설정.
 - 실제 AWS 배포 구성요소와 비용 한도.
 - 애플리케이션, 데이터베이스와 부하 발생기의 크기.
 - 환경별 네트워크, 보안 경계와 Secret 관리 방식.

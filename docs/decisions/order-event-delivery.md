@@ -26,6 +26,8 @@ Accepted
 - Producer 측 최종 실패와 Consumer 측 DLT는 별도의 실패 경계로 관리한다.
 - 데이터 수집 플랫폼 전달과 인기 메뉴 집계는 서로 다른 Consumer Group으로 구성하여 Offset과 장애 경계를 독립적으로 관리한다. 인기 메뉴 Consumer Group은 PostgreSQL 집계를 반영한 뒤 Redis 인기 메뉴 캐시를 무효화한다.
 - 각 Consumer Group은 동일 주문 이벤트를 독립적으로 소비한다. 한 Consumer Group의 지연, 재시도 또는 중단은 다른 Consumer Group과 주문 완료 응답을 막지 않는다.
+- 각 Consumer Group은 별도의 Retry Topic과 DLT를 사용한다. 처리 실패 이벤트는 Retry Topic으로 이동하여 원래 Topic의 후속 주문 처리를 막지 않고, 재시도 한도를 넘으면 해당 Consumer Group의 DLT로 격리한다.
+- DLT 이벤트는 장애 원인 수정 또는 외부 플랫폼 복구 후 운영자가 수동 재처리한다. 재처리 시 기존 `eventId`를 유지하고, 재처리 성공 또는 운영자의 명시적 폐기 결정 전에는 자동 삭제하지 않는다.
 - 각 Consumer Group 안에서는 파티션을 Consumer 인스턴스에 분배하여 수평 확장하며, 활성 Consumer 인스턴스 수는 파티션 수를 초과해도 추가 병렬 처리량을 만들지 않는다는 제약을 문서화한다.
 - Consumer는 `(consumerName, eventId)` Unique Constraint가 있는 처리 이력 테이블과 PostgreSQL `INSERT ... ON CONFLICT DO NOTHING`을 사용하여 중복 효과를 방지한다.
 - 업무 반영과 처리 이력 기록은 같은 PostgreSQL 트랜잭션에서 수행하고, DB 반영 후 Offset을 확정한다. 중복 이벤트로 처리 이력 삽입이 생략되면 업무 반영도 다시 수행하지 않는다.
@@ -54,6 +56,11 @@ Kafka는 단순한 비동기 전송 수단이 아니라 주문 처리와 복수 
 - Option: 데이터 수집 플랫폼 전달과 인기 메뉴 집계를 별도 Consumer Group으로 구성한다.
 - Rationale: 두 업무가 같은 이벤트를 독립적으로 소비하고 Offset, 확장, 재시도와 장애를 서로 격리할 수 있다.
 - Trade-offs: Consumer Group별 멱등 처리 이력, Lag, 재시도와 DLT를 각각 운영해야 한다.
+- Decision: Accepted.
+
+- Option: Consumer Group별 Retry Topic과 DLT를 분리하고 최종 실패 이벤트를 수동 재처리한다.
+- Rationale: 일시 실패가 원래 Topic의 후속 처리를 막지 않게 하면서 업무별 장애와 재처리를 독립적으로 관리하고, 기존 `eventId`와 Consumer 멱등 처리로 재처리의 중복 효과를 방지할 수 있다.
+- Trade-offs: Consumer Group별 Retry Topic·DLT, 재처리 권한과 폐기 이력을 운영해야 하며 재시도 횟수·간격과 보관기간은 별도 근거로 정해야 한다.
 - Decision: Accepted.
 
 - Option: PostgreSQL `FOR UPDATE SKIP LOCKED`로 짧게 선점하는 다중 Publisher.
@@ -111,8 +118,8 @@ Kafka는 단순한 비동기 전송 수단이 아니라 주문 처리와 복수 
 - 주문 완료 이벤트의 실제 타입명, Topic명, 직렬화 형식과 스키마 버전 관리 방식.
 - 데이터 수집 플랫폼 전달과 인기 메뉴 집계 Consumer Group의 식별자, Group별 초기 Consumer 인스턴스 수와 Kafka 파티션 수.
 - 아침·점심 피크별 허용 Consumer Lag과 Scale-out 기준.
-- Consumer 재시도 횟수, 간격과 Retry Topic 사용 여부.
-- DLT 보관기간, 재처리 조건과 재처리 주체.
+- Consumer 재시도 횟수와 간격.
+- DLT 보관기간과 명시적 폐기 승인 절차.
 - Consumer 처리 이력의 보관·정리 기간.
 - Outbox 데이터 보관·정리 기간.
 - 데이터 수집 플랫폼의 실제 인터페이스와 장애 처리 계약.
