@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.github.w00lam.coffeeorderservice.point.application.PointBalanceOutOfRangeException;
-import io.github.w00lam.coffeeorderservice.point.application.UserNotFoundException;
+import io.github.w00lam.coffeeorderservice.auth.application.UserNotFoundException;
 import io.github.w00lam.coffeeorderservice.support.PostgreSqlIntegrationTest;
 import java.util.ArrayList;
 import java.util.List;

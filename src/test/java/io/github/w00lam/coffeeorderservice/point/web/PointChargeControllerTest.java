@@ -7,10 +7,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import io.github.w00lam.coffeeorderservice.auth.application.AuthenticatedUserProvider;
 import io.github.w00lam.coffeeorderservice.auth.application.UnauthenticatedException;
+import io.github.w00lam.coffeeorderservice.auth.application.UserNotFoundException;
 import io.github.w00lam.coffeeorderservice.point.application.PointBalanceOutOfRangeException;
 import io.github.w00lam.coffeeorderservice.point.application.PointChargeResult;
 import io.github.w00lam.coffeeorderservice.point.application.PointChargeService;
-import io.github.w00lam.coffeeorderservice.point.application.UserNotFoundException;
 import io.github.w00lam.coffeeorderservice.point.domain.PointAmount;
 import java.time.Instant;
 import org.junit.jupiter.api.Test;

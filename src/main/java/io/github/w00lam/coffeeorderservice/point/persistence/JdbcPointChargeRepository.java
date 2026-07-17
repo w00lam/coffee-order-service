@@ -3,7 +3,7 @@ package io.github.w00lam.coffeeorderservice.point.persistence;
 import io.github.w00lam.coffeeorderservice.point.application.PointBalanceOutOfRangeException;
 import io.github.w00lam.coffeeorderservice.point.application.PointChargeRepository;
 import io.github.w00lam.coffeeorderservice.point.application.PointChargeResult;
-import io.github.w00lam.coffeeorderservice.point.application.UserNotFoundException;
+import io.github.w00lam.coffeeorderservice.auth.application.UserNotFoundException;
 import java.sql.Timestamp;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;

@@ -1,4 +1,4 @@
-package io.github.w00lam.coffeeorderservice.point.application;
+package io.github.w00lam.coffeeorderservice.auth.application;
 
 public class UserNotFoundException extends RuntimeException {
 

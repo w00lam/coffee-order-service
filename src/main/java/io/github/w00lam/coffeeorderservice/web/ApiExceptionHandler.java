@@ -1,8 +1,8 @@
 package io.github.w00lam.coffeeorderservice.web;
 
 import io.github.w00lam.coffeeorderservice.auth.application.UnauthenticatedException;
+import io.github.w00lam.coffeeorderservice.auth.application.UserNotFoundException;
 import io.github.w00lam.coffeeorderservice.point.application.PointBalanceOutOfRangeException;
-import io.github.w00lam.coffeeorderservice.point.application.UserNotFoundException;
 import io.github.w00lam.coffeeorderservice.point.web.InvalidChargeAmountException;
 import java.time.Instant;
 import java.util.List;
