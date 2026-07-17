@@ -117,13 +117,14 @@ public class JdbcOrderRepository implements OrderRepository {
 				insert into order_event_intents (event_id, order_id, event_name, payload, occurred_at, delivery_state)
 				select :eventId, :orderId, 'OrderCompleted',
 				       jsonb_build_object(
-				           'eventId', :eventId, 'eventName', 'OrderCompleted', 'orderId', :orderId,
+				           'schemaVersion', 1, 'eventId', :eventId,
+				           'eventType', 'OrderCompleted', 'orderId', :orderId,
 				           'userId', :userId, 'items',
 				           (select jsonb_agg(jsonb_build_object(
 				               'menuId', menu_id, 'quantity', quantity,
 				               'unitPrice', unit_price_snapshot, 'lineAmount', line_amount)
 				            order by menu_id) from order_items where order_id = :orderId),
-				           'totalPaymentAmount', :total, 'completedAt', cast(:completedAt as text)),
+				           'totalPaymentAmount', :total, 'occurredAt', cast(:completedAt as text)),
 				       :completedAt, 'PENDING'
 				""").param("eventId", eventId).param("orderId", orderId).param("userId", userId)
 				.param("total", totalPaymentAmount).param("completedAt", Timestamp.from(completedAt)).update();

@@ -63,6 +63,11 @@ class OrderApplicationServiceIntegrationTest extends PostgreSqlIntegrationTest {
 		assertThat(count("order_event_intents")).isEqualTo(1);
 		assertThat(value("select status from order_tokens where order_token = 'token-1'", String.class))
 				.isEqualTo("SUCCEEDED");
+		assertThat(value("select payload ->> 'schemaVersion' from order_event_intents", String.class))
+				.isEqualTo("1");
+		assertThat(value("select payload ->> 'eventType' from order_event_intents", String.class))
+				.isEqualTo("OrderCompleted");
+		assertThat(value("select jsonb_exists(payload, 'occurredAt') from order_event_intents", Boolean.class)).isTrue();
 	}
 
 	@Test
