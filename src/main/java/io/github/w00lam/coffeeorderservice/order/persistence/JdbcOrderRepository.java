@@ -124,7 +124,8 @@ public class JdbcOrderRepository implements OrderRepository {
 				               'menuId', menu_id, 'quantity', quantity,
 				               'unitPrice', unit_price_snapshot, 'lineAmount', line_amount)
 				            order by menu_id) from order_items where order_id = :orderId),
-				           'totalPaymentAmount', :total, 'occurredAt', cast(:completedAt as text)),
+				           'totalPaymentAmount', :total,
+				           'occurredAt', cast(:completedAt as timestamptz)),
 				       :completedAt, 'PENDING'
 				""").param("eventId", eventId).param("orderId", orderId).param("userId", userId)
 				.param("total", totalPaymentAmount).param("completedAt", Timestamp.from(completedAt)).update();

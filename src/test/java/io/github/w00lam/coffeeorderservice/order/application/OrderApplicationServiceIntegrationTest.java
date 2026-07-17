@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.github.w00lam.coffeeorderservice.support.PostgreSqlIntegrationTest;
 import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -68,6 +69,8 @@ class OrderApplicationServiceIntegrationTest extends PostgreSqlIntegrationTest {
 		assertThat(value("select payload ->> 'eventType' from order_event_intents", String.class))
 				.isEqualTo("OrderCompleted");
 		assertThat(value("select jsonb_exists(payload, 'occurredAt') from order_event_intents", Boolean.class)).isTrue();
+		assertThat(Instant.parse(value("select payload ->> 'occurredAt' from order_event_intents", String.class)))
+				.isEqualTo(result.completedAt());
 	}
 
 	@Test
