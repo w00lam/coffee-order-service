@@ -2,6 +2,11 @@ package io.github.w00lam.coffeeorderservice.web;
 
 import io.github.w00lam.coffeeorderservice.auth.application.UnauthenticatedException;
 import io.github.w00lam.coffeeorderservice.auth.application.UserNotFoundException;
+import io.github.w00lam.coffeeorderservice.order.application.ConfirmedOrderBusinessException;
+import io.github.w00lam.coffeeorderservice.order.application.OrderTokenExpiredException;
+import io.github.w00lam.coffeeorderservice.order.application.OrderTokenNotFoundException;
+import io.github.w00lam.coffeeorderservice.order.application.OrderTokenRequestConflictException;
+import io.github.w00lam.coffeeorderservice.order.web.OrderRequestValidationException;
 import io.github.w00lam.coffeeorderservice.point.application.PointBalanceOutOfRangeException;
 import io.github.w00lam.coffeeorderservice.point.web.InvalidChargeAmountException;
 import java.time.Instant;
@@ -49,6 +54,31 @@ public class ApiExceptionHandler {
 		return error(HttpStatus.UNPROCESSABLE_CONTENT, "POINT_BALANCE_OUT_OF_RANGE", "충전 후 잔액이 허용 범위를 초과합니다.");
 	}
 
+	@ExceptionHandler(OrderRequestValidationException.class)
+	public ResponseEntity<ApiErrorResponse> handleOrderValidation(OrderRequestValidationException exception) {
+		return error(HttpStatus.BAD_REQUEST, exception.code(), exception.getMessage());
+	}
+
+	@ExceptionHandler(OrderTokenNotFoundException.class)
+	public ResponseEntity<ApiErrorResponse> handleOrderTokenNotFound(OrderTokenNotFoundException exception) {
+		return error(HttpStatus.NOT_FOUND, "ORDER_TOKEN_NOT_FOUND", "주문 토큰을 찾을 수 없습니다.");
+	}
+
+	@ExceptionHandler(OrderTokenRequestConflictException.class)
+	public ResponseEntity<ApiErrorResponse> handleOrderTokenConflict(OrderTokenRequestConflictException exception) {
+		return error(HttpStatus.CONFLICT, "ORDER_TOKEN_REQUEST_CONFLICT", "주문 토큰의 요청 내용이 충돌합니다.");
+	}
+
+	@ExceptionHandler(OrderTokenExpiredException.class)
+	public ResponseEntity<ApiErrorResponse> handleOrderTokenExpired(OrderTokenExpiredException exception) {
+		return error(HttpStatus.GONE, "ORDER_TOKEN_EXPIRED", "주문 토큰이 만료되었습니다.");
+	}
+
+	@ExceptionHandler(ConfirmedOrderBusinessException.class)
+	public ResponseEntity<ApiErrorResponse> handleConfirmedOrderFailure(ConfirmedOrderBusinessException exception) {
+		return error(HttpStatus.UNPROCESSABLE_CONTENT, exception.code(), exception.getMessage(), exception.occurredAt());
+	}
+
 	@ExceptionHandler(DataAccessResourceFailureException.class)
 	public ResponseEntity<ApiErrorResponse> handleUnavailable(DataAccessResourceFailureException exception) {
 		log.error("Database is temporarily unavailable", exception);
@@ -62,7 +92,11 @@ public class ApiExceptionHandler {
 	}
 
 	private ResponseEntity<ApiErrorResponse> error(HttpStatus status, String code, String message) {
+		return error(status, code, message, Instant.now());
+	}
+
+	private ResponseEntity<ApiErrorResponse> error(HttpStatus status, String code, String message, Instant occurredAt) {
 		return ResponseEntity.status(status)
-				.body(new ApiErrorResponse(code, message, List.of(), Instant.now()));
+				.body(new ApiErrorResponse(code, message, List.of(), occurredAt));
 	}
 }
