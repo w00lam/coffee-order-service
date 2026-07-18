@@ -12,3 +12,12 @@ spring:
       auto-offset-reset: earliest
     listener:
       ack-mode: record
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus
+  metrics:
+    tags:
+      instance: ${server.port:unknown}

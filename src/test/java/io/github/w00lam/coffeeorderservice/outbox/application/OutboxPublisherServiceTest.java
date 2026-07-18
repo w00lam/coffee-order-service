@@ -1,5 +1,6 @@
 package io.github.w00lam.coffeeorderservice.outbox.application;
 
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doThrow;
@@ -27,7 +28,7 @@ class OutboxPublisherServiceTest {
 	void marks_event_published_after_kafka_acknowledgement() {
 		OutboxEvent event = event(NOW.minusSeconds(10), 1);
 		given(repository.claim(10, NOW, Duration.ofSeconds(30))).willReturn(List.of(event));
-		var service = new OutboxPublisherService(repository, publisher);
+		var service = new OutboxPublisherService(repository, publisher, new SimpleMeterRegistry());
 
 		assertThat(service.publishBatch(10, NOW, Duration.ofSeconds(30),
 				Duration.ofSeconds(1), Duration.ofMinutes(1))).isEqualTo(1);
@@ -41,7 +42,7 @@ class OutboxPublisherServiceTest {
 		OutboxEvent event = event(NOW.minusSeconds(10), 3);
 		given(repository.claim(10, NOW, Duration.ofSeconds(30))).willReturn(List.of(event));
 		doThrow(new IllegalStateException("broker unavailable")).when(publisher).publish(event);
-		var service = new OutboxPublisherService(repository, publisher);
+		var service = new OutboxPublisherService(repository, publisher, new SimpleMeterRegistry());
 
 		service.publishBatch(10, NOW, Duration.ofSeconds(30), Duration.ofSeconds(1), Duration.ofMinutes(1));
 
@@ -54,7 +55,7 @@ class OutboxPublisherServiceTest {
 		OutboxEvent event = event(NOW.minus(Duration.ofHours(24)), 4);
 		given(repository.claim(10, NOW, Duration.ofSeconds(30))).willReturn(List.of(event));
 		doThrow(new IllegalStateException("broker unavailable")).when(publisher).publish(event);
-		var service = new OutboxPublisherService(repository, publisher);
+		var service = new OutboxPublisherService(repository, publisher, new SimpleMeterRegistry());
 
 		service.publishBatch(10, NOW, Duration.ofSeconds(30), Duration.ofSeconds(1), Duration.ofMinutes(1));
 

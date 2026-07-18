@@ -9,6 +9,7 @@ if (-not $SkipBuild) {
 }
 
 Invoke-SystemTestCompose up -d --wait
+Invoke-SystemTestCompose exec -T postgres psql -U coffee -d coffee_order -c 'create extension if not exists pg_stat_statements' | Out-Null
 $jar = Get-ChildItem (Join-Path $RepositoryRoot 'build\libs\*-system-test.jar') | Select-Object -First 1
 if (-not $jar) { throw 'System-test executable jar was not found.' }
 

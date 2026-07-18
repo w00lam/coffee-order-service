@@ -22,6 +22,14 @@ powershell -ExecutionPolicy Bypass -File .\system-test\scripts\stop-environment.
 
 `APP_PORTS`, `POSTGRES_PORT`, `KAFKA_PORT`, `OUTBOX_*`, `ORDER_EVENTS_TOPIC`, `POPULAR_MENU_GROUP` 환경변수로 실행별 값을 바꿀 수 있다. 기존 사용자 컨테이너를 건드리지 않도록 Compose project 이름과 포트를 별도로 지정한다.
 
+성능 반복 측정은 다음 명령으로 low, medium, high 부하를 각각 5회 실행한다. 기존 `functional_failures`, `unexpected_5xx` Threshold만 사용하며 새 SLO를 만들지 않는다.
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\system-test\load\run-performance-suite.ps1 -Phase baseline -Profile all -Repetitions 5
+```
+
+각 실행은 `build/system-test/results/<run-prefix>-observability`에 Prometheus 원본, PostgreSQL query 통계와 slow query 로그, Hikari/JVM/HTTP/Kafka metric, Outbox 시계열과 event 지연, container 통계 및 SHA-256 manifest를 남긴다. `verify-invariants.ps1`는 Outbox와 Consumer projection이 모두 drain된 뒤 11개 불변식을 검증한다.
+
 정상 부하와 장애 주입 스크립트는 실행마다 고유 prefix를 생성하고, 완료 후 `verify-invariants.ps1`가 PostgreSQL 원본·Outbox·인기 메뉴 projection을 함께 검사한다. k6 원본 JSON·summary, 불변식 원본 출력과 장애 시각 기록은 `build/system-test/results`에 생성되며 Git에는 추적하지 않는다.
 
 ## 시나리오
