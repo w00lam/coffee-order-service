@@ -1,4 +1,4 @@
-package io.github.w00lam.coffeeorderservice.loadtest;
+package io.github.w00lam.coffeeorderservice.systemtest;
 
 import io.github.w00lam.coffeeorderservice.auth.application.AuthenticatedUserProvider;
 import io.github.w00lam.coffeeorderservice.auth.application.UnauthenticatedException;
@@ -9,12 +9,12 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 @Configuration(proxyBeanMethods = false)
-class LoadTestAuthenticationConfiguration {
-	static final String USER_HEADER = "X-Load-Test-User";
+class SystemTestAuthenticationConfiguration {
+	static final String USER_HEADER = "X-System-Test-User";
 
 	@Bean
 	@Primary
-	AuthenticatedUserProvider loadTestAuthenticatedUserProvider() {
+	AuthenticatedUserProvider systemTestAuthenticatedUserProvider() {
 		return () -> {
 			var attributes = RequestContextHolder.getRequestAttributes();
 			if (!(attributes instanceof ServletRequestAttributes servletAttributes)) {

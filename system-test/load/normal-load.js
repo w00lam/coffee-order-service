@@ -41,6 +41,7 @@ for (const [name, config] of Object.entries({
 
 export const options = {
   scenarios,
+  summaryTrendStats: ['avg', 'min', 'med', 'max', 'p(90)', 'p(95)', 'p(99)'],
   thresholds: {
     unexpected_5xx: ['count==0'],
     ...( __ENV.SKIP_FUNCTIONAL_THRESHOLD === 'true' ? {} : { functional_failures: ['count==0'] }),
@@ -52,7 +53,7 @@ function url() {
   const iteration = typeof __ITER === 'number' ? __ITER : 0;
   return urls[(vu + iteration) % urls.length];
 }
-function headers(user) { return { headers: { 'Content-Type': 'application/json', 'X-Load-Test-User': user } }; }
+function headers(user) { return { headers: { 'Content-Type': 'application/json', 'X-System-Test-User': user } }; }
 function observe(response, accepted) {
   applicationLatency.add(response.timings.duration);
   if (response.status >= 500) unexpected5xx.add(1);
@@ -67,7 +68,7 @@ function issueToken(user) {
 }
 function order(user, token, menuId) {
   return http.post(`${url()}/orders`, JSON.stringify({ items: [{ menuId, quantity: 1 }] }), {
-    headers: { 'Content-Type': 'application/json', 'X-Load-Test-User': user, 'Order-Token': token },
+    headers: { 'Content-Type': 'application/json', 'X-System-Test-User': user, 'Order-Token': token },
   });
 }
 

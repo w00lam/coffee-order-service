@@ -1,4 +1,4 @@
-name: ${COMPOSE_PROJECT_NAME:-coffee-order-load-test}
+name: ${COMPOSE_PROJECT_NAME:-coffee-order-system-test}
 
 services:
   postgres:
@@ -10,7 +10,7 @@ services:
     ports:
       - "${POSTGRES_PORT:-15432}:5432"
     volumes:
-      - ./sql:/load-test/sql:ro
+      - ./invariants:/system-test/invariants:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U coffee -d coffee_order"]
       interval: 2s

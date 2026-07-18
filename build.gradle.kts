@@ -4,15 +4,15 @@ plugins {
 	id("io.spring.dependency-management") version "1.1.7"
 }
 
-val loadTest by sourceSets.creating {
-	java.srcDir("src/loadTest/java")
-	resources.srcDir("src/loadTest/resources")
+val systemTest by sourceSets.creating {
+	java.srcDir("src/systemTest/java")
+	resources.srcDir("src/systemTest/resources")
 	compileClasspath += sourceSets.main.get().output
 	runtimeClasspath += output + compileClasspath
 }
 
-configurations[loadTest.implementationConfigurationName].extendsFrom(configurations.implementation.get())
-configurations[loadTest.runtimeOnlyConfigurationName].extendsFrom(configurations.runtimeOnly.get())
+configurations[systemTest.implementationConfigurationName].extendsFrom(configurations.implementation.get())
+configurations[systemTest.runtimeOnlyConfigurationName].extendsFrom(configurations.runtimeOnly.get())
 
 group = "io.github.w00lam"
 version = "0.0.1-SNAPSHOT"
@@ -50,11 +50,11 @@ tasks.withType<Test> {
 	useJUnitPlatform()
 }
 
-tasks.register<org.springframework.boot.gradle.tasks.bundling.BootJar>("loadTestBootJar") {
+tasks.register<org.springframework.boot.gradle.tasks.bundling.BootJar>("systemTestBootJar") {
 	group = "verification"
 	description = "Builds the local multi-instance verification application."
-	archiveClassifier = "load-test"
-	mainClass = "io.github.w00lam.coffeeorderservice.loadtest.LoadTestApplication"
+	archiveClassifier = "system-test"
+	mainClass = "io.github.w00lam.coffeeorderservice.systemtest.SystemTestApplication"
 	targetJavaVersion.set(JavaVersion.VERSION_21)
-	classpath(loadTest.runtimeClasspath)
+	classpath(systemTest.runtimeClasspath)
 }

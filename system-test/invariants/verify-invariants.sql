@@ -109,6 +109,6 @@ select invariant, passed, details from invariant_results order by invariant;
 do $$
 begin
     if exists (select 1 from invariant_results where not passed) then
-        raise exception 'One or more load-test invariants failed';
+        raise exception 'One or more system-test invariants failed';
     end if;
 end $$;

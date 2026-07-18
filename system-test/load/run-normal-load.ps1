@@ -7,12 +7,13 @@ param(
     [int]$ConflictIterations = 30,
     [int]$MixedIterations = 120
 )
-. (Join-Path $PSScriptRoot 'common.ps1')
+$systemTestRoot = Split-Path -Parent $PSScriptRoot
+. (Join-Path $systemTestRoot 'scripts\common.ps1')
 
 New-Item -ItemType Directory -Force -Path (Join-Path $RuntimeDirectory 'results') | Out-Null
-Invoke-LoadTestCompose exec -T postgres psql -U coffee -d coffee_order "--set=prefix=$RunPrefix" -f /load-test/sql/prepare-run.sql
+Invoke-SystemTestCompose exec -T postgres psql -U coffee -d coffee_order "--set=prefix=$RunPrefix" -f /system-test/invariants/prepare-run.sql
 
-$env:BASE_URLS = ($LoadTestConfig.AppPorts | ForEach-Object { "http://localhost:$_" }) -join ','
+$env:BASE_URLS = ($SystemTestConfig.AppPorts | ForEach-Object { "http://localhost:$_" }) -join ','
 $env:RUN_PREFIX = $RunPrefix
 $env:CHARGE_ITERATIONS = [string]$ChargeIterations
 $env:CHARGE_AMOUNT = [string]$ChargeAmount
@@ -21,8 +22,8 @@ $env:IDEMPOTENT_ITERATIONS = [string]$IdempotentIterations
 $env:CONFLICT_ITERATIONS = [string]$ConflictIterations
 $env:MIXED_ITERATIONS = [string]$MixedIterations
 $summary = Join-Path $RuntimeDirectory "results\$RunPrefix-summary.json"
-& k6 run --summary-export $summary (Join-Path $LoadTestRoot 'k6\normal-load.js')
+& k6 run --summary-export $summary (Join-Path $SystemTestRoot 'load\normal-load.js')
 if ($LASTEXITCODE -ne 0) { throw "k6 failed with exit code $LASTEXITCODE" }
 
-& (Join-Path $PSScriptRoot 'verify-invariants.ps1') -RunPrefix $RunPrefix -ExpectedChargeBalance ($ChargeIterations * $ChargeAmount)
+& (Join-Path $SystemTestRoot 'invariants\verify-invariants.ps1') -RunPrefix $RunPrefix -ExpectedChargeBalance ($ChargeIterations * $ChargeAmount)
 Write-Output "NORMAL_LOAD_OK runPrefix=$RunPrefix summary=$summary"

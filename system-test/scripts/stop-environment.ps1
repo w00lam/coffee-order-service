@@ -7,4 +7,4 @@ foreach ($pidFile in Get-ChildItem -ErrorAction SilentlyContinue (Join-Path $Run
     if ($process -and $process.ProcessName -eq 'java') { Stop-Process -Id $processId -Force }
     Remove-Item -LiteralPath $pidFile.FullName -Force
 }
-if (-not $KeepInfrastructure) { Invoke-LoadTestCompose down -v }
+if (-not $KeepInfrastructure) { Invoke-SystemTestCompose down -v }
