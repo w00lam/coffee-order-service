@@ -1,7 +1,8 @@
 param(
     [Parameter(Mandatory = $true)][string]$RunPrefix,
     [int]$ExpectedChargeBalance = 600,
-    [int]$TimeoutSeconds = 90
+    [int]$TimeoutSeconds = 90,
+    [string]$OutputPath
 )
 $systemTestRoot = Split-Path -Parent $PSScriptRoot
 . (Join-Path $systemTestRoot 'scripts\common.ps1')
@@ -15,4 +16,5 @@ do {
 
 if ([DateTimeOffset]::UtcNow -ge $deadline) { throw "Outbox did not drain within $TimeoutSeconds seconds." }
 $result = Invoke-SystemTestCompose exec -T postgres psql -U coffee -d coffee_order "--set=prefix=$RunPrefix" "--set=expected_charge_balance=$ExpectedChargeBalance" -f /system-test/invariants/verify-invariants.sql
+if ($OutputPath) { $result | Set-Content -Encoding utf8 -Path $OutputPath }
 $result

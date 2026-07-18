@@ -22,7 +22,7 @@ powershell -ExecutionPolicy Bypass -File .\system-test\scripts\stop-environment.
 
 `APP_PORTS`, `POSTGRES_PORT`, `KAFKA_PORT`, `OUTBOX_*`, `ORDER_EVENTS_TOPIC`, `POPULAR_MENU_GROUP` 환경변수로 실행별 값을 바꿀 수 있다. 기존 사용자 컨테이너를 건드리지 않도록 Compose project 이름과 포트를 별도로 지정한다.
 
-정상 부하와 장애 주입 스크립트는 실행마다 고유 prefix를 생성하고, 완료 후 `verify-invariants.ps1`가 PostgreSQL 원본·Outbox·인기 메뉴 projection을 함께 검사한다. k6 summary와 장애 시각 기록은 `build/system-test/results`에 생성되며 Git에는 추적하지 않는다.
+정상 부하와 장애 주입 스크립트는 실행마다 고유 prefix를 생성하고, 완료 후 `verify-invariants.ps1`가 PostgreSQL 원본·Outbox·인기 메뉴 projection을 함께 검사한다. k6 원본 JSON·summary, 불변식 원본 출력과 장애 시각 기록은 `build/system-test/results`에 생성되며 Git에는 추적하지 않는다.
 
 ## 시나리오
 

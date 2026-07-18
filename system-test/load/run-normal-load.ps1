@@ -22,8 +22,10 @@ $env:IDEMPOTENT_ITERATIONS = [string]$IdempotentIterations
 $env:CONFLICT_ITERATIONS = [string]$ConflictIterations
 $env:MIXED_ITERATIONS = [string]$MixedIterations
 $summary = Join-Path $RuntimeDirectory "results\$RunPrefix-summary.json"
-& k6 run --summary-export $summary (Join-Path $SystemTestRoot 'load\normal-load.js')
+$raw = Join-Path $RuntimeDirectory "results\$RunPrefix-k6.json"
+$invariants = Join-Path $RuntimeDirectory "results\$RunPrefix-invariants.txt"
+& k6 run --out "json=$raw" --summary-export $summary (Join-Path $SystemTestRoot 'load\normal-load.js')
 if ($LASTEXITCODE -ne 0) { throw "k6 failed with exit code $LASTEXITCODE" }
 
-& (Join-Path $SystemTestRoot 'invariants\verify-invariants.ps1') -RunPrefix $RunPrefix -ExpectedChargeBalance ($ChargeIterations * $ChargeAmount)
-Write-Output "NORMAL_LOAD_OK runPrefix=$RunPrefix summary=$summary"
+& (Join-Path $SystemTestRoot 'invariants\verify-invariants.ps1') -RunPrefix $RunPrefix -ExpectedChargeBalance ($ChargeIterations * $ChargeAmount) -OutputPath $invariants
+Write-Output "NORMAL_LOAD_OK runPrefix=$RunPrefix summary=$summary raw=$raw invariants=$invariants"

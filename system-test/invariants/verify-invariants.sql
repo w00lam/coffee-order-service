@@ -106,6 +106,23 @@ select 'no_failed_outbox', count(*) = 0, format('failed=%s', count(*))
 
 select invariant, passed, details from invariant_results order by invariant;
 
+select count(*) filter (where event.delivery_state = 'PENDING') as pending,
+       count(*) filter (where event.delivery_state = 'PROCESSING') as processing,
+       count(*) filter (where event.delivery_state = 'FAILED') as failed,
+       count(*) filter (where event.delivery_state = 'PUBLISHED') as published
+  from order_event_intents event
+  join orders using (order_id)
+ where orders.user_id like :'prefix' || '-%';
+
+select count(distinct orders.order_id) as orders,
+       count(distinct event.event_id) as outbox_events,
+       count(distinct processed.event_id) as consumer_event_rows,
+       count(processed.event_id) - count(distinct processed.event_id) as duplicate_consumer_effects
+  from orders
+  left join order_event_intents event on event.order_id = orders.order_id
+  left join popular_menu_processed_events processed on processed.order_id = orders.order_id
+ where orders.user_id like :'prefix' || '-%';
+
 do $$
 begin
     if exists (select 1 from invariant_results where not passed) then

@@ -20,11 +20,13 @@ $env:CONFLICT_ITERATIONS = '0'
 $env:MIXED_ITERATIONS = [string]$Iterations
 $env:SKIP_FUNCTIONAL_THRESHOLD = 'true'
 $summary = Join-Path $resultsDirectory "$RunPrefix-summary.json"
+$raw = Join-Path $resultsDirectory "$RunPrefix-k6.json"
+$invariants = Join-Path $resultsDirectory "$RunPrefix-invariants.txt"
 $stdout = Join-Path $resultsDirectory "$RunPrefix-k6.log"
 $stderr = Join-Path $resultsDirectory "$RunPrefix-k6.err.log"
 
 $startedAt = [DateTimeOffset]::UtcNow
-$k6 = Start-Process -FilePath 'k6' -ArgumentList @('run', '--summary-export', $summary, (Join-Path $SystemTestRoot 'load\normal-load.js')) -PassThru -WindowStyle Hidden -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+$k6 = Start-Process -FilePath 'k6' -ArgumentList @('run', '--out', "json=$raw", '--summary-export', $summary, (Join-Path $SystemTestRoot 'load\normal-load.js')) -PassThru -WindowStyle Hidden -RedirectStandardOutput $stdout -RedirectStandardError $stderr
 Start-Sleep -Seconds $AppFailureDelaySeconds
 
 $failedPort = $SystemTestConfig.AppPorts[0]
@@ -57,8 +59,10 @@ $report = [ordered]@{
     kafkaRecoveredAtUtc = $kafkaRecoveredAt.ToString('o')
     kafkaOutageSeconds = $recoverySeconds
     k6Summary = $summary
+    k6Raw = $raw
+    invariants = $invariants
 }
 $report | ConvertTo-Json | Set-Content -Encoding utf8 (Join-Path $resultsDirectory "$RunPrefix-fault-report.json")
 
-& (Join-Path $SystemTestRoot 'invariants\verify-invariants.ps1') -RunPrefix $RunPrefix -ExpectedChargeBalance 0 -TimeoutSeconds 120
+& (Join-Path $SystemTestRoot 'invariants\verify-invariants.ps1') -RunPrefix $RunPrefix -ExpectedChargeBalance 0 -TimeoutSeconds 120 -OutputPath $invariants
 Write-Output "FAULT_INJECTION_OK runPrefix=$RunPrefix appFailurePort=$failedPort kafkaOutageSeconds=$recoverySeconds report=$($resultsDirectory)\$RunPrefix-fault-report.json"

@@ -34,6 +34,7 @@ Accepted
 ## Verification Evidence (2026-07-18)
 
 - 상세 결과: [`../system-test-report.md`](../system-test-report.md)
+- 실행 증거 manifest: [`../evidence/system-test/2026-07-18/evidence-manifest.md`](../evidence/system-test/2026-07-18/evidence-manifest.md)
 - 정상 다중 인스턴스 실행에서 기능 실패와 예상하지 않은 5xx 없이 11개 정합성 불변식이 통과했다.
 - 애플리케이션 한 인스턴스 종료와 Kafka 중단·복구 후에도 11개 정합성 불변식이 통과하고 미처리·실패 Outbox가 남지 않았다.
 - 이번 처리량과 `p95`·`p99`는 로컬 단일 실행 기준선으로만 채택하며 Threshold나 SLO로 승격하지 않는다.
