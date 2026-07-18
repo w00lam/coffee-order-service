@@ -5,11 +5,7 @@ import tools.jackson.databind.ObjectMapper;
 import io.github.w00lam.coffeeorderservice.popularmenu.application.OrderCompletedProjectionEvent;
 import io.github.w00lam.coffeeorderservice.popularmenu.application.OrderCompletedProjectionItem;
 import io.github.w00lam.coffeeorderservice.popularmenu.application.PopularMenuProjectionUpdater;
-import io.micrometer.core.instrument.Counter;
-import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Timer;
-import java.time.Duration;
-import java.time.Instant;
+import io.github.w00lam.coffeeorderservice.popularmenu.observability.ConsumerMetrics;
 import java.util.HashSet;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -23,17 +19,13 @@ import org.springframework.stereotype.Component;
 public class PopularMenuKafkaConsumer {
 	private final ObjectMapper objectMapper;
 	private final PopularMenuProjectionUpdater updater;
-	private final Counter processed;
-	private final Counter duplicates;
-	private final Timer eventLatency;
+	private final ConsumerMetrics metrics;
 
 	public PopularMenuKafkaConsumer(ObjectMapper objectMapper, PopularMenuProjectionUpdater updater,
-			MeterRegistry meterRegistry) {
+			ConsumerMetrics metrics) {
 		this.objectMapper = objectMapper;
 		this.updater = updater;
-		this.processed = meterRegistry.counter("coffee.consumer.processed");
-		this.duplicates = meterRegistry.counter("coffee.consumer.duplicates");
-		this.eventLatency = meterRegistry.timer("coffee.consumer.event.latency");
+		this.metrics = metrics;
 	}
 
 	// 계약 위반은 재시도해도 회복되지 않으므로 DLT로 보내고, 일시적 처리 실패만 retry topic을 거친다.
@@ -57,10 +49,9 @@ public class PopularMenuKafkaConsumer {
 						.map(item -> new OrderCompletedProjectionItem(item.menuId(), item.quantity()))
 						.toList()));
 		if (applied) {
-			processed.increment();
-			eventLatency.record(Duration.between(message.occurredAt(), Instant.now()));
+			metrics.processed(message.occurredAt());
 		} else {
-			duplicates.increment();
+			metrics.duplicate();
 		}
 	}
 

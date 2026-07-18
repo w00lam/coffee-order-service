@@ -10,6 +10,19 @@ if (-not $SkipBuild) {
 
 Invoke-SystemTestCompose up -d --wait
 Invoke-SystemTestCompose exec -T postgres psql -U coffee -d coffee_order -c 'create extension if not exists pg_stat_statements' | Out-Null
+$effectiveConfig = [ordered]@{
+    startedAtUtc = [DateTimeOffset]::UtcNow.ToString('O')
+    composeProject = $SystemTestConfig.ComposeProject
+    postgresPort = $SystemTestConfig.PostgresPort
+    kafkaPort = $SystemTestConfig.KafkaPort
+    appPorts = $SystemTestConfig.AppPorts
+    topic = $SystemTestConfig.Topic
+    consumerGroup = $SystemTestConfig.ConsumerGroup
+    outboxPollInterval = $SystemTestConfig.PollInterval
+    outboxBatchSize = $SystemTestConfig.BatchSize
+    outboxLeaseDuration = $SystemTestConfig.LeaseDuration
+}
+$effectiveConfig | ConvertTo-Json | Set-Content -Encoding utf8 (Join-Path $RuntimeDirectory 'effective-config.json')
 $jar = Get-ChildItem (Join-Path $RepositoryRoot 'build\libs\*-system-test.jar') | Select-Object -First 1
 if (-not $jar) { throw 'System-test executable jar was not found.' }
 
@@ -19,6 +32,7 @@ foreach ($port in $SystemTestConfig.AppPorts) {
     $arguments = @(
         '-jar', $jar.FullName,
         "--server.port=$port",
+        '--spring.profiles.active=system-test,observability',
         "--spring.datasource.url=jdbc:postgresql://localhost:$($SystemTestConfig.PostgresPort)/coffee_order",
         '--spring.datasource.username=coffee', '--spring.datasource.password=coffee',
         "--spring.kafka.bootstrap-servers=localhost:$($SystemTestConfig.KafkaPort)",

@@ -3,7 +3,7 @@
 ## 결론
 
 - 확인된 주 병목은 고부하에서 Outbox publisher가 batch 처리를 마친 뒤 매번 기다리는 `200ms` fixed delay였다.
-- 단일 변수로 system-test 기본 `OUTBOX_POLL_INTERVAL`을 `200ms`에서 `20ms`로 줄였다. batch `20`, lease `5s`, Kafka/Hikari 설정과 부하 데이터는 바꾸지 않았다.
+- 단일 변수로 `OUTBOX_POLL_INTERVAL`을 `200ms`에서 `20ms`로 줄였다. 검증 후 애플리케이션과 system-test 기본값을 `20ms`로 맞췄으며, batch `20`, lease `5s`, Kafka/Hikari 설정과 부하 데이터는 바꾸지 않았다.
 - 고부하 5회 중앙값 기준 Outbox publication p95는 `3318.17ms`에서 `2135.31ms`로 `35.65%` 감소했고 p99는 `35.54%` 감소했다.
 - 30회 채택 실행(baseline 15회, optimized 15회)에서 기능 실패와 예상하지 않은 5xx는 0건이었다. 11개 정합성 불변식, Outbox 최종 잔류 0건, Consumer 중복 업무 효과 0건을 모두 유지했다.
 - 이번 수치는 운영 SLO나 새로운 k6 Threshold가 아니다.
@@ -108,6 +108,8 @@ low/medium HTTP p95의 작은 상승은 각 5회 범위가 서로 겹치고, 같
 - Outbox 집계: `build/system-test/results/performance-comparison-outbox.json`
 
 각 observability 디렉터리의 `sha256-manifest.json`에도 실행별 원본 파일 hash가 있다. 원본은 재현 가능한 로컬 산출물이라 Git에는 추가하지 않는다.
+
+구조 재구성 후 `run-performance-suite.ps1`는 시작 시 `build/system-test/effective-config.json`을 확인해 baseline `200ms`, optimized `20ms`가 실제 실행 설정과 일치하는지 검증한다. low·medium·high 입력값은 `load/profiles.ps1`, 실행별 manifest는 `reporting/write-run-manifest.ps1`, phase별 HTTP index는 `reporting/summarize-performance.ps1`에서 관리한다.
 
 ## 환경 한계와 미확정 사항
 

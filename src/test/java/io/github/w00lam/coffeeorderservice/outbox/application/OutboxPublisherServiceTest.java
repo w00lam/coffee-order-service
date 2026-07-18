@@ -1,6 +1,6 @@
 package io.github.w00lam.coffeeorderservice.outbox.application;
 
-import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import io.github.w00lam.coffeeorderservice.outbox.observability.OutboxMetrics;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doThrow;
@@ -24,17 +24,22 @@ class OutboxPublisherServiceTest {
 	@Mock
 	private OrderEventPublisher publisher;
 
+	@Mock
+	private OutboxMetrics metrics;
+
 	@Test
 	void marks_event_published_after_kafka_acknowledgement() {
 		OutboxEvent event = event(NOW.minusSeconds(10), 1);
 		given(repository.claim(10, NOW, Duration.ofSeconds(30))).willReturn(List.of(event));
-		var service = new OutboxPublisherService(repository, publisher, new SimpleMeterRegistry());
+		var service = new OutboxPublisherService(repository, publisher, metrics);
 
 		assertThat(service.publishBatch(10, NOW, Duration.ofSeconds(30),
 				Duration.ofSeconds(1), Duration.ofMinutes(1))).isEqualTo(1);
 
 		verify(publisher).publish(event);
 		verify(repository).markPublished("event-1", NOW);
+		verify(metrics).claimed(1);
+		verify(metrics).published(event.occurredAt());
 	}
 
 	@Test
@@ -42,12 +47,13 @@ class OutboxPublisherServiceTest {
 		OutboxEvent event = event(NOW.minusSeconds(10), 3);
 		given(repository.claim(10, NOW, Duration.ofSeconds(30))).willReturn(List.of(event));
 		doThrow(new IllegalStateException("broker unavailable")).when(publisher).publish(event);
-		var service = new OutboxPublisherService(repository, publisher, new SimpleMeterRegistry());
+		var service = new OutboxPublisherService(repository, publisher, metrics);
 
 		service.publishBatch(10, NOW, Duration.ofSeconds(30), Duration.ofSeconds(1), Duration.ofMinutes(1));
 
 		verify(repository).reschedule("event-1", NOW.plusSeconds(4),
 				"IllegalStateException: broker unavailable");
+		verify(metrics).failed();
 	}
 
 	@Test
@@ -55,11 +61,12 @@ class OutboxPublisherServiceTest {
 		OutboxEvent event = event(NOW.minus(Duration.ofHours(24)), 4);
 		given(repository.claim(10, NOW, Duration.ofSeconds(30))).willReturn(List.of(event));
 		doThrow(new IllegalStateException("broker unavailable")).when(publisher).publish(event);
-		var service = new OutboxPublisherService(repository, publisher, new SimpleMeterRegistry());
+		var service = new OutboxPublisherService(repository, publisher, metrics);
 
 		service.publishBatch(10, NOW, Duration.ofSeconds(30), Duration.ofSeconds(1), Duration.ofMinutes(1));
 
 		verify(repository).markFailed("event-1", "IllegalStateException: broker unavailable");
+		verify(metrics).failed();
 	}
 
 	private OutboxEvent event(Instant occurredAt, int attempts) {

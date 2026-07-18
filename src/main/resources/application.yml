@@ -13,11 +13,7 @@ spring:
     listener:
       ack-mode: record
 
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,prometheus
-  metrics:
-    tags:
-      instance: ${server.port:unknown}
+coffee:
+  kafka:
+    publisher:
+      poll-interval: ${OUTBOX_POLL_INTERVAL:20ms}

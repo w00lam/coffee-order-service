@@ -110,7 +110,4 @@ Invoke-SystemTestCompose logs --since $startedAt.ToString('O') postgres 2>&1 |
 Invoke-SystemTestCompose stats --no-stream 2>&1 |
     Set-Content -Encoding utf8 (Join-Path $OutputDirectory 'container-stats.txt')
 
-Get-ChildItem -File $OutputDirectory | ForEach-Object {
-    $hash = (Get-FileHash -Algorithm SHA256 $_.FullName).Hash.ToLowerInvariant()
-    [pscustomobject]@{ file = $_.Name; bytes = $_.Length; sha256 = $hash }
-} | ConvertTo-Json | Set-Content -Encoding utf8 (Join-Path $OutputDirectory 'sha256-manifest.json')
+& (Join-Path $systemTestRoot 'reporting\write-run-manifest.ps1') -OutputDirectory $OutputDirectory

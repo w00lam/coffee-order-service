@@ -30,6 +30,7 @@ $stopFile = Join-Path $RuntimeDirectory "results\$RunPrefix-observability.stop"
 if (-not $SkipObservability) {
     Remove-Item -ErrorAction SilentlyContinue -LiteralPath $stopFile
     $observabilityDirectory = Join-Path $RuntimeDirectory "results\$RunPrefix-observability"
+    New-Item -ItemType Directory -Force -Path $observabilityDirectory | Out-Null
     $collectorArguments = @(
         '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', (Join-Path $SystemTestRoot 'observability\collect-run.ps1'),
         '-RunPrefix', $RunPrefix, '-OutputDirectory', $observabilityDirectory, '-StopFile', $stopFile
