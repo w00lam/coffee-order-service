@@ -25,6 +25,8 @@ public class JdbcOrderRepository implements OrderRepository {
 
 	@Override
 	public TokenClaim claimToken(String token, String userId, String fingerprint, Instant now) {
+		// 조건부 갱신이 동일 토큰의 처리 권한을 한 요청에만 부여한다.
+		// 이 변경도 주문 트랜잭션에 속하므로 인프라 장애 시 AVAILABLE 상태로 함께 롤백된다.
 		int updated = jdbcClient.sql("""
 				update order_tokens
 				   set request_fingerprint = :fingerprint
@@ -87,6 +89,7 @@ public class JdbcOrderRepository implements OrderRepository {
 
 	@Override
 	public Long deductPoints(String userId, long amount) {
+		// 잔액 검사와 차감을 한 SQL로 묶어 동시 주문에서도 음수 잔액과 이중 차감을 막는다.
 		return jdbcClient.sql("""
 				update point_accounts
 				   set balance = balance - :amount
@@ -113,6 +116,7 @@ public class JdbcOrderRepository implements OrderRepository {
 					.param("quantity", item.quantity()).param("unitPrice", item.unitPrice())
 					.param("lineAmount", item.lineAmount()).update();
 		}
+		// 주문 결과와 발행 의도를 같은 로컬 트랜잭션에 저장하고 Kafka 전송은 Outbox Publisher에 맡긴다.
 		jdbcClient.sql("""
 				insert into order_event_intents (event_id, order_id, event_name, payload, occurred_at, delivery_state)
 				select :eventId, :orderId, 'OrderCompleted',

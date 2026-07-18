@@ -21,6 +21,8 @@ public class JdbcOutboxRepository implements OutboxRepository {
 	@Override
 	@Transactional
 	public List<OutboxEvent> claim(int batchSize, Instant now, Duration leaseDuration) {
+		// SKIP LOCKED로 여러 인스턴스가 서로 다른 이벤트를 선점하고,
+		// lease가 만료된 PROCESSING 이벤트는 중단된 인스턴스 대신 다시 회수한다.
 		return jdbcClient.sql("""
 				with candidates as (
 				    select event_id

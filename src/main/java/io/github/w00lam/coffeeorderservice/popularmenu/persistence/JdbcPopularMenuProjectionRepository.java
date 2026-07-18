@@ -20,6 +20,8 @@ public class JdbcPopularMenuProjectionRepository implements PopularMenuProjectio
 
 	@Override
 	public boolean apply(OrderCompletedProjectionEvent event) {
+		// eventId 유일성 삽입이 중복 소비의 멱등성 관문이다. 호출자의 트랜잭션 안에서
+		// 처리 이력, 원본 기여분, 시간 집계가 모두 성공하거나 모두 롤백된다.
 		int accepted = jdbcClient.sql("""
 				insert into popular_menu_processed_events (event_id, order_id, completed_at, processed_at)
 				values (:eventId, :orderId, :completedAt, clock_timestamp())
@@ -30,6 +32,7 @@ public class JdbcPopularMenuProjectionRepository implements PopularMenuProjectio
 			return false;
 		}
 
+		// 겹치는 메뉴를 갱신하는 이벤트끼리도 같은 잠금 순서를 따르게 해 교착 가능성을 낮춘다.
 		event.items().stream().sorted(Comparator.comparing(OrderCompletedProjectionItem::menuId))
 				.forEach(item -> applyItem(event, item));
 		return true;
@@ -43,6 +46,7 @@ public class JdbcPopularMenuProjectionRepository implements PopularMenuProjectio
 				.param("menuId", item.menuId()).param("quantity", item.quantity())
 				.param("completedAt", Timestamp.from(event.completedAt())).update();
 
+		// 시간 버킷은 조회량을 줄이고, 별도 기여분 원장은 윈도 경계의 정확한 보정에 사용한다.
 		jdbcClient.sql("""
 				insert into popular_menu_hourly_stats
 				       (bucket_start, menu_id, total_quantity, order_count)
@@ -58,6 +62,7 @@ public class JdbcPopularMenuProjectionRepository implements PopularMenuProjectio
 	@Override
 	public List<PopularMenuProjectionRow> findTopThree(
 			Instant windowStart, Instant firstFullBucket, Instant fullBucketEnd, Instant asOf) {
+		// 완전한 시간 버킷과 양 끝의 원본 기여분을 합쳐 (windowStart, asOf]를 근사 없이 계산한다.
 		return jdbcClient.sql("""
 				with full_bucket_values as (
 				    select menu_id, total_quantity, order_count

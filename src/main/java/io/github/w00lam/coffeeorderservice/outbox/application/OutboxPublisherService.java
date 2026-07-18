@@ -19,6 +19,8 @@ public class OutboxPublisherService {
 
 	public int publishBatch(int batchSize, Instant now, Duration leaseDuration,
 			Duration initialBackoff, Duration maximumBackoff) {
+		// claim 트랜잭션을 끝낸 뒤 Kafka를 호출해 DB 잠금을 네트워크 처리 동안 유지하지 않는다.
+		// Kafka 전송 성공 후 상태 기록 전에 중단되면 재발행될 수 있으므로 Consumer가 eventId로 멱등 처리한다.
 		var events = repository.claim(batchSize, now, leaseDuration);
 		for (OutboxEvent event : events) {
 			try {

@@ -29,6 +29,8 @@ public class OrderApplicationService {
 		this.clock = clock;
 	}
 
+	// 확정된 업무 실패는 토큰에 같은 응답을 재현할 수 있도록 커밋하고,
+	// 예기치 않은 장애는 토큰 선점과 주문 변경을 모두 롤백한다.
 	@Transactional(noRollbackFor = ConfirmedOrderBusinessException.class)
 	public OrderResult placeOrder(String userId, String token, List<OrderLineCommand> lines) {
 		if (!repository.userExists(userId)) {

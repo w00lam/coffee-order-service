@@ -24,6 +24,8 @@ public class PopularMenuKafkaConsumer {
 		this.updater = updater;
 	}
 
+	// 계약 위반은 재시도해도 회복되지 않으므로 DLT로 보내고, 일시적 처리 실패만 retry topic을 거친다.
+	// Kafka 중복 전달은 PostgreSQL의 processed event 유일성 제약으로 흡수한다.
 	@KafkaListener(topics = "${coffee.kafka.order-events-topic}", groupId = "${coffee.kafka.popular-menu-group-id}")
 	@RetryableTopic(
 			attempts = "${coffee.kafka.popular-menu.retry-attempts}",
