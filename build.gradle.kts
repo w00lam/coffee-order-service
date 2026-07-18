@@ -4,6 +4,16 @@ plugins {
 	id("io.spring.dependency-management") version "1.1.7"
 }
 
+val loadTest by sourceSets.creating {
+	java.srcDir("src/loadTest/java")
+	resources.srcDir("src/loadTest/resources")
+	compileClasspath += sourceSets.main.get().output
+	runtimeClasspath += output + compileClasspath
+}
+
+configurations[loadTest.implementationConfigurationName].extendsFrom(configurations.implementation.get())
+configurations[loadTest.runtimeOnlyConfigurationName].extendsFrom(configurations.runtimeOnly.get())
+
 group = "io.github.w00lam"
 version = "0.0.1-SNAPSHOT"
 description = "Coffee order service"
@@ -38,4 +48,13 @@ dependencies {
 
 tasks.withType<Test> {
 	useJUnitPlatform()
+}
+
+tasks.register<org.springframework.boot.gradle.tasks.bundling.BootJar>("loadTestBootJar") {
+	group = "verification"
+	description = "Builds the local multi-instance verification application."
+	archiveClassifier = "load-test"
+	mainClass = "io.github.w00lam.coffeeorderservice.loadtest.LoadTestApplication"
+	targetJavaVersion.set(JavaVersion.VERSION_21)
+	classpath(loadTest.runtimeClasspath)
 }
