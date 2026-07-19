@@ -1,4 +1,4 @@
-package io.github.w00lam.coffeeorderservice.popularmenu.kafka;
+package io.github.w00lam.coffeeorderservice.order.event;
 
 import java.time.Instant;
 import java.util.List;

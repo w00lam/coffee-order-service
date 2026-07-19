@@ -39,7 +39,7 @@ Accepted
 
 | 발행 이벤트 | Producer | Consumer | 소비 후 책임 |
 | --- | --- | --- | --- |
-| 주문 완료 이벤트(논리명 `OrderCompleted`) | Transactional Outbox Publisher | 데이터 수집 플랫폼 전달 Consumer | 인증된 사용자 식별값, 복수 주문 항목과 총 결제금액을 외부 데이터 수집 플랫폼 또는 Mock API로 전달한다. |
+| 주문 완료 이벤트(논리명 `OrderCompleted`) | Transactional Outbox Publisher | 데이터 수집 플랫폼 전달 Consumer | 인증된 사용자 식별값, 복수 주문 항목과 총 결제금액을 HTTP 플랫폼에 전달하고 `eventId`를 멱등 키로 제공한다. |
 | 주문 완료 이벤트(논리명 `OrderCompleted`) | Transactional Outbox Publisher | 인기 메뉴 집계 Consumer | 주문 항목별 판매 수량과 주문 건수를 PostgreSQL 집계에 반영하고 Redis 인기 메뉴 캐시를 무효화한다. |
 
 두 Consumer는 동일한 주문 완료 이벤트를 각자의 Consumer Group으로 독립 소비한다. 이벤트의 실제 타입명, Topic명과 Consumer Group 식별자는 구현 전 별도로 확정한다.

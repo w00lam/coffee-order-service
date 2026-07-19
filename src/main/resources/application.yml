@@ -17,3 +17,17 @@ coffee:
   kafka:
     publisher:
       poll-interval: ${OUTBOX_POLL_INTERVAL:20ms}
+  auth:
+    header:
+      enabled: false
+  data-collection:
+    enabled: false
+    orders-path: /orders
+    group-id: data-collection-platform
+    retry-attempts: 3
+    retry-initial-backoff: 250ms
+    retry-multiplier: 2
+    retry-maximum-backoff: 2s
+    retry-topic-suffix: -data-collection-retry
+    dlt-topic-suffix: -data-collection-dlt
+    auto-create-topics: true

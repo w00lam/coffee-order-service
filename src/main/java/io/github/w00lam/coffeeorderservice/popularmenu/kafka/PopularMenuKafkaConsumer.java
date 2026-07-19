@@ -2,6 +2,7 @@ package io.github.w00lam.coffeeorderservice.popularmenu.kafka;
 
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
+import io.github.w00lam.coffeeorderservice.order.event.OrderCompletedMessage;
 import io.github.w00lam.coffeeorderservice.popularmenu.application.OrderCompletedProjectionEvent;
 import io.github.w00lam.coffeeorderservice.popularmenu.application.OrderCompletedProjectionItem;
 import io.github.w00lam.coffeeorderservice.popularmenu.application.PopularMenuProjectionUpdater;

@@ -86,7 +86,7 @@ Kafka에는 현재 `OrderCompleted` 한 종류만 발행합니다. Transactional
 | Consumer | 소비 후 책임 | 현재 상태 |
 |---|---|---|
 | 인기 메뉴 집계 Consumer | 처리 이력과 PostgreSQL projection을 원자적으로 갱신 | 구현됨 |
-| 데이터 수집 플랫폼 전달 Consumer | 사용자, 주문 항목과 결제금액을 외부 플랫폼에 전달 | 외부 인터페이스와 장애 계약이 Open |
+| 데이터 수집 플랫폼 전달 Consumer | 사용자, 주문 항목과 결제금액을 HTTP 플랫폼에 전달 | 구현됨 (`eventId`를 `Idempotency-Key`로 전달) |
 
 각 Consumer Group은 별도의 Retry Topic과 DLT 경계를 가지며, 한 Consumer의 장애가 주문 성공이나 다른 Consumer를 막지 않도록 설계합니다. 파티션 수와 Consumer 인스턴스 수는 임의로 고정하지 않고 목표 처리량, 단일 Consumer 처리량과 허용 lag를 측정한 뒤 결정합니다. 자세한 대안과 trade-off는 [주문 이벤트 전달 결정](docs/decisions/order-event-delivery.md)에 기록했습니다.
 
@@ -101,6 +101,14 @@ Kafka에는 현재 `OrderCompleted` 한 종류만 발행합니다. Transactional
 | 인기 메뉴 조회 | `GET` | `/popular-menus` | 불필요 |
 
 `POST /orders`는 서버가 발급한 토큰을 `Order-Token` header로 받습니다. 인증 사용자 제공 방식, 요청·응답 예시와 오류 계약은 [API 상세 명세](docs/Specification.md)를 기준으로 합니다.
+
+실제 인증 시스템이 없는 로컬 평가에서는 `local` profile을 활성화하고 `X-User-Id` header로 사용자를 지정할 수 있습니다. 이 방식은 개발·과제 검증 전용이며 운영 인증을 대체하지 않습니다.
+
+```powershell
+.\gradlew.bat bootRun --args='--spring.profiles.active=local'
+```
+
+데이터 수집 전달은 `coffee.data-collection.enabled=true`, `coffee.data-collection.base-url=<Mock API URL>`로 활성화합니다. 전용 Consumer Group과 Retry Topic·DLT를 사용하므로 외부 플랫폼 장애가 주문 완료와 인기 메뉴 집계를 막지 않습니다.
 
 ## 데이터 모델
 
